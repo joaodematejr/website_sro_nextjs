@@ -34,6 +34,10 @@ function serializeDbError(error: unknown) {
   }
 }
 
+function quoteSqlIdentifier(identifier: string) {
+  return `[${identifier.replaceAll(']', ']]')}]`
+}
+
 async function queryHealthcheck(database: DbName) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const target = getDbConnectionTarget(database)
@@ -91,10 +95,6 @@ async function queryDatabaseStatuses() {
   } catch (error) {
     return { error: serializeDbError(error) }
   }
-}
-
-function quoteSqlIdentifier(identifier: string) {
-  return `[${identifier.replaceAll(']', ']]')}]`
 }
 
 async function queryDatabaseAccessChecks() {
