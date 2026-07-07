@@ -166,26 +166,29 @@ function EventSchedule({ labels }: { labels: readonly { key: string; label: stri
   const labelMap = Object.fromEntries(labels.map((l) => [l.key, l.label]))
 
   return (
-    <div className="overflow-x-auto px-5 py-4">
-      <table className="w-full border-collapse text-sm">
-        <tbody>
-          {DEFAULT_EVENTS.map((ev, i) => {
-            const ms = now ? msUntilNextKst(ev.dayKst, ev.hourKst, ev.minuteKst, now) : null
-            return (
-              <tr key={ev.key} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
-                <td className="border border-[#c8b87a]/40 px-4 py-2 text-[12px] font-semibold text-[#5a4010]">
-                  {labelMap[ev.key] ?? ev.key}
-                </td>
-                <td className="border border-[#c8b87a]/40 px-4 py-2 text-right font-mono text-[12px] font-bold text-[#3a2e1a]">
-                  {ms !== null ? formatCountdown(ms) : '--:--:--'}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+    <div className="px-5 py-4">
+      <div className="overflow-hidden rounded-md border border-[#c8b87a]/40">
+        <table className="w-full border-collapse text-sm">
+          <tbody>
+            {DEFAULT_EVENTS.map((ev, i) => {
+              const ms = now ? msUntilNextKst(ev.dayKst, ev.hourKst, ev.minuteKst, now) : null
+              return (
+                <tr key={ev.key} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
+                  <td className="border border-[#c8b87a]/40 px-4 py-2 text-[12px] font-semibold text-[#5a4010]">
+                    {labelMap[ev.key] ?? ev.key}
+                  </td>
+                  <td className="border border-[#c8b87a]/40 px-4 py-2 text-right font-mono text-[12px] font-bold text-[#3a2e1a]">
+                    {ms !== null ? formatCountdown(ms) : '--:--:--'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
+}
 
 
 function GameRanking({ data, labels }: {
@@ -198,14 +201,14 @@ function GameRanking({ data, labels }: {
 }) {
   const [tab, setTab] = useState<'player' | 'guild'>('player')
 
-  const btnBase = 'flex-1 border border-[#c8b87a]/40 py-2 text-[11px] font-bold uppercase tracking-wider transition'
+  const btnBase = 'flex-1 rounded-sm border border-[#c8b87a]/40 py-2 text-[11px] font-bold uppercase tracking-wider transition'
   const btnActive = 'bg-[#d4bc7a] text-[#2a1f0a]'
   const btnInactive = 'bg-[#e8dfc8] text-[#5a4010] hover:bg-[#ede5d8]'
 
   return (
     <div>
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-[#c8b87a]/40">
+      <div className="flex gap-2 rounded-md border border-[#c8b87a]/40 bg-[#efe6d1] px-4 py-2">
         <button
           type="button"
           className={`${btnBase} ${tab === 'player' ? btnActive : btnInactive}`}
@@ -223,8 +226,9 @@ function GameRanking({ data, labels }: {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto px-5 py-4">
-        <table className="w-full border-collapse text-sm">
+      <div className="px-5 py-4">
+        <div className="overflow-hidden rounded-md border border-[#c8b87a]/40">
+          <table className="w-full border-collapse text-sm">
           <thead>
             <tr
               className="border border-[#c8b87a]/60"
@@ -289,10 +293,12 @@ function GameRanking({ data, labels }: {
               </tr>
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   )
+}
 
 
 // ── Panel header shared style ────────────────────────────────────────────
@@ -493,12 +499,11 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
       {/* ── Event Schedule + Ranking ─────────────────────────────────── */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Event Schedule */}
-        <div className="overflow-hidden rounded-xl border-2 border-[#c8b87a]/70 shadow-xl" style={{ background: 'linear-gradient(135deg,#faf6ed,#e8dfc8)' }}>
+        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[#f5f0e4] text-[#3a2e1a]">
           <PanelHeader
             title={messages.home.eventScheduleTitle}
             icon={
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-                {/* hourglass_empty */}
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M6 2v6l4 4-4 4v6h12v-6l-4-4 4-4V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5-4-4V4h8v3.5l-4 4z" />
               </svg>
             }
@@ -507,12 +512,11 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
         </div>
 
         {/* Game Ranking */}
-        <div className="overflow-hidden rounded-xl border-2 border-[#c8b87a]/70 shadow-xl" style={{ background: 'linear-gradient(135deg,#faf6ed,#e8dfc8)' }}>
+        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[#f5f0e4] text-[#3a2e1a]">
           <PanelHeader
             title={messages.home.rankingTitle}
             icon={
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-                {/* emoji_events / trophy */}
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
               </svg>
             }
@@ -532,9 +536,7 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
               }}
             />
           ) : (
-            <div className="bg-gradient-to-b from-[#f5f0e4] to-[#e8dfc8] px-4 py-12 text-center text-[13px] text-[#a89060]">
-              {messages.home.rankingEmpty}
-            </div>
+            <div className="px-5 py-4 text-center text-[12px] text-[#7a7060]">{messages.home.rankingEmpty}</div>
           )}
         </div>
       </div>
