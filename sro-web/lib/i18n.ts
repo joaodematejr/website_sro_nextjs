@@ -32,9 +32,9 @@ export const i18nMessages = {
       legal: 'Marcas registradas pertencem aos seus respectivos proprietarios. Todos os direitos reservados.',
     },
     home: {
-      title: 'Migracao Web do Silkroad Online',
+      title: 'Silkroad Online',
       description:
-        'Home, download e fluxo de cadastro do legado estao sendo migrados de PHP para Next.js com TypeScript, mantendo compatibilidade com o banco do jogo.',
+        'Home, download e fluxo de cadastro estao sendo modernizados em Next.js com TypeScript, com compatibilidade mantida com o banco do jogo.',
       goToDownload: 'Ir para Download',
       createAccount: 'Criar Conta',
       chargeCenter: 'Central de Recarga',
@@ -63,10 +63,10 @@ export const i18nMessages = {
       ],
     },
     download: {
-      step: 'Migracao Etapa 1',
+      step: 'Download Oficial',
       title: 'Central de Download',
       description:
-        'Pagina de download do legado PHP migrada para Next.js App Router. Links estaticos e requisitos estao tipados e mantidos em React.',
+        'Baixe o cliente oficial e confira os requisitos minimos e recomendados para jogar.',
       downloadClient: 'Baixar Cliente',
       minimum: 'Minimo',
       recommended: 'Recomendado',
@@ -103,10 +103,10 @@ export const i18nMessages = {
       },
     },
     chargeCenter: {
-      tag: 'Compatibilidade com Legado',
+      tag: 'Compatibilidade de Protocolo',
       title: 'Central de Recarga',
-      description: 'Painel web para consultar saldo de silk e executar compra/estorno no protocolo legado.',
-      info: 'As operacoes de compra e estorno seguem o contrato legado e exigem SecretStr valido.',
+      description: 'Painel web para consultar saldo de silk e executar compra/estorno no protocolo de billing.',
+      info: 'As operacoes de compra e estorno seguem o contrato de billing e exigem SecretStr valido.',
       balanceTitle: 'Consulta de Saldo',
       balanceDescription: 'Informe o JID e consulte silk own, gift e point.',
       sessionChecking: 'Verificando sessao...',
@@ -169,7 +169,7 @@ export const i18nMessages = {
     home: {
       title: 'Silkroad Online Web Migration',
       description:
-        'Legacy home, download and registration flow are being migrated from PHP to Next.js with TypeScript, keeping game database compatibility.',
+        'Home, download, and registration flow are being modernized with Next.js and TypeScript while keeping compatibility with the game database.',
       goToDownload: 'Go to Download',
       createAccount: 'Create Account',
       chargeCenter: 'Charge Center',
@@ -198,10 +198,10 @@ export const i18nMessages = {
       ],
     },
     download: {
-      step: 'Migration Step 1',
+      step: 'Official Download',
       title: 'Download Center',
       description:
-        'Legacy PHP download page migrated to Next.js App Router. Static links and requirements are now typed and maintained in React.',
+        'Download the official client and review the minimum and recommended system requirements.',
       downloadClient: 'Download Client',
       minimum: 'Minimum',
       recommended: 'Recommended',
@@ -237,10 +237,10 @@ export const i18nMessages = {
       },
     },
     chargeCenter: {
-      tag: 'Legacy Compatibility',
+      tag: 'Protocol Compatibility',
       title: 'Charge Center',
-      description: 'Web panel to query silk balance and run purchase/refund on the legacy protocol.',
-      info: 'Purchase and refund operations follow the legacy contract and require a valid SecretStr.',
+      description: 'Web panel to query silk balance and run purchase/refund on the billing protocol.',
+      info: 'Purchase and refund operations follow the billing contract and require a valid SecretStr.',
       balanceTitle: 'Balance Lookup',
       balanceDescription: 'Provide a JID to query own, gift and point silk balances.',
       sessionChecking: 'Checking session...',

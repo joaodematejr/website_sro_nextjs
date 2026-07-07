@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         return Response.json({ ok: true, user: { username: accountUser.StrUserID, jid: Number(accountUser.JID) } })
       }
 
-      // Fallback de compatibilidade com legado: valida por TB_Net2e/SecondPassword.
+      // Fallback de compatibilidade: valida por TB_Net2e/SecondPassword.
       let net2eUser: { JID: number; StrUserID: string } | undefined
 
       for (const net2eTable of net2eTables) {
