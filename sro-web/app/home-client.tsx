@@ -298,26 +298,11 @@ function GameRanking({ data, labels }: {
 // ── Panel header shared style ────────────────────────────────────────────
 function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div
-      className="relative flex items-center gap-3 px-5 py-3.5 overflow-hidden"
-      style={{
-        backgroundImage: 'linear-gradient(135deg, rgba(196,169,92,0.6) 0%, rgba(168,136,48,0.4) 100%), url(/legacy/img/homebk22.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Overlay escuro */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
-      
-      {/* Ícone */}
-      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded bg-[var(--legacy-accent-gold)]/20 border border-[var(--legacy-accent-gold)]/60">
-        <span className="text-[var(--legacy-accent-gold)] text-lg drop-shadow">{icon}</span>
+    <div className="flex items-center gap-2 border-b border-[#c8b87a]/40 px-5 py-3">
+      <div className="flex h-5 w-5 items-center justify-center text-[#6a5220]">
+        {icon}
       </div>
-      
-      {/* Título */}
-      <h2 className="relative z-10 font-serif text-[18px] font-bold italic tracking-wide text-[var(--legacy-accent-gold)] drop-shadow-lg">
-        {title}
-      </h2>
+      <h2 className="text-lg font-bold text-[#3a2e1a]">{title}</h2>
     </div>
   )
 }
