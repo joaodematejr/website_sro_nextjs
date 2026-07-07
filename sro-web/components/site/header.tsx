@@ -25,6 +25,13 @@ const navSections: NavSection[] = [
     children: [{ href: '/download', label: 'Baixar Jogo' }],
   },
   {
+    label: 'Game Info',
+    children: [
+      { href: '/game-info/areas', label: 'Areas NPCs' },
+      { href: '/game-info/server-info', label: 'Server Info' },
+    ],
+  },
+  {
     label: 'Comunidade',
     children: [
       { href: 'https://discord.com/', label: 'Discord', external: true },
@@ -60,7 +67,9 @@ export function SiteHeader() {
                   ? messages.header.guide
                   : section.label === 'Download'
                     ? messages.header.download
-                    : section.label === 'Comunidade'
+                    : section.label === 'Game Info'
+                      ? messages.header.gameInfo
+                      : section.label === 'Comunidade'
                       ? messages.header.community
                       : messages.header.member
 
@@ -78,7 +87,11 @@ export function SiteHeader() {
                       const childLabel =
                         child.label === 'Baixar Jogo'
                           ? messages.header.gameDownload
-                          : child.label === 'Cadastro'
+                          : child.label === 'Areas NPCs'
+                            ? messages.header.areasNpc
+                            : child.label === 'Server Info'
+                              ? messages.header.serverInfo
+                              : child.label === 'Cadastro'
                             ? messages.header.register
                             : child.label === 'Redefinir Senha'
                               ? messages.header.resetPassword

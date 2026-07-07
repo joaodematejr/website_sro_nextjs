@@ -1,13 +1,79 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 import { useI18n } from '@/components/providers/i18n-provider'
 import { SiteContainer } from '@/components/site/container'
 import type { NewsItem } from '@/lib/news'
+import type { RankingData } from '@/lib/rankings'
+import type { ServerInfo } from '@/lib/server-info'
 
-type HomeClientProps = {
+export type HomeClientProps = {
   latestNews?: NewsItem[]
+  serverTimeZone?: string
+  serverInfo?: ServerInfo
+  rankingData?: RankingData
+}
+
+function formatClockDate(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    timeZone,
+  }).format(date)
+}
+
+function formatClockTime(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+    timeZone,
+  }).format(date)
+}
+
+function SilkroadClock({ serverTimeZone }: { serverTimeZone: string }) {
+  const [now, setNow] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setNow(new Date())
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const localLabel = serverTimeZone.replace(/_/g, ' ').split('/').pop() ?? serverTimeZone
+
+  return (
+    <div className="border-b border-[var(--legacy-panel-border)] bg-[#0a0807] px-3 py-3">
+      <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--legacy-accent-gold)]">
+        Silkroad Standard Time
+      </p>
+
+      {/* Server time (KST) */}
+      <div className="mb-2 rounded border border-[var(--legacy-panel-border)]/50 bg-black/40 px-2 py-1.5">
+        <p className="text-[9px] text-slate-500">
+          {now ? formatClockDate(now, 'Asia/Seoul') : ''}
+        </p>
+        <p className="font-mono text-[15px] font-bold tabular-nums text-[var(--legacy-accent-gold)] tracking-wide">
+          {now ? formatClockTime(now, 'Asia/Seoul') : '00:00:00 AM'}
+        </p>
+      </div>
+
+      {/* Server local time */}
+      <p className="text-center text-[9px] text-slate-400">{localLabel}</p>
+      <div className="mt-1 rounded border border-slate-800 bg-black/30 px-2 py-1.5">
+        <p className="text-[9px] text-slate-500">
+          {now ? formatClockDate(now, serverTimeZone) : ''}
+        </p>
+        <p className="font-mono text-[13px] font-semibold tabular-nums text-slate-300 tracking-wide">
+          {now ? formatClockTime(now, serverTimeZone) : '00:00:00 PM'}
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function formatNewsDate(value: string, locale: string) {
@@ -38,7 +104,225 @@ function formatNewsDate(value: string, locale: string) {
   }).format(parsed)
 }
 
-export function HomeClient({ latestNews }: HomeClientProps) {
+// ── Event schedule default times (KST = UTC+9, day 0=Sun) ────────────────
+const DEFAULT_EVENTS = [
+  { key: 'ctf',          dayKst: 0, hourKst: 20, minuteKst: 0 },
+  { key: 'baFlag',       dayKst: 1, hourKst: 20, minuteKst: 0 },
+  { key: 'baScore',      dayKst: 2, hourKst: 20, minuteKst: 0 },
+  { key: 'td',           dayKst: 3, hourKst: 20, minuteKst: 0 },
+  { key: 'lms',          dayKst: 4, hourKst: 20, minuteKst: 0 },
+  { key: 'specialTrade', dayKst: 5, hourKst: 20, minuteKst: 0 },
+  { key: 'guildWar',     dayKst: 6, hourKst: 20, minuteKst: 0 },
+]
+
+function msUntilNextKst(dayKst: number, hourKst: number, minuteKst: number, now: Date) {
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000
+  const nowUtcMs = now.getTime()
+  const nowKstMs = nowUtcMs + KST_OFFSET_MS
+
+  // Build target for this week
+  const nowKstDate = new Date(nowKstMs)
+  const currentDayKst = nowKstDate.getUTCDay()
+  let daysAhead = (dayKst - currentDayKst + 7) % 7
+
+  // If same day but already past the time, move to next week
+  const targetMs =
+    new Date(Date.UTC(
+      nowKstDate.getUTCFullYear(),
+      nowKstDate.getUTCMonth(),
+      nowKstDate.getUTCDate() + daysAhead,
+      hourKst - 9,  // convert KST hour to UTC
+      minuteKst,
+      0,
+    )).getTime()
+
+  const diff = targetMs - nowUtcMs
+  return diff <= 0 ? diff + 7 * 24 * 3600 * 1000 : diff
+}
+
+function formatCountdown(ms: number) {
+  const totalSec = Math.floor(ms / 1000)
+  const days = Math.floor(totalSec / 86400)
+  const hours = Math.floor((totalSec % 86400) / 3600)
+  const minutes = Math.floor((totalSec % 3600) / 60)
+  const seconds = totalSec % 60
+
+  const hh = String(hours).padStart(2, '0')
+  const mm = String(minutes).padStart(2, '0')
+  const ss = String(seconds).padStart(2, '0')
+
+  return days > 0 ? `${days}D ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`
+}
+
+function EventSchedule({ labels }: { labels: readonly { key: string; label: string }[] }) {
+  const [now, setNow] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setNow(new Date())
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const labelMap = Object.fromEntries(labels.map((l) => [l.key, l.label]))
+
+  return (
+    <div className="overflow-x-auto px-5 py-4">
+      <table className="w-full border-collapse text-sm">
+        <tbody>
+          {DEFAULT_EVENTS.map((ev, i) => {
+            const ms = now ? msUntilNextKst(ev.dayKst, ev.hourKst, ev.minuteKst, now) : null
+            return (
+              <tr key={ev.key} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
+                <td className="border border-[#c8b87a]/40 px-4 py-2 text-[12px] font-semibold text-[#5a4010]">
+                  {labelMap[ev.key] ?? ev.key}
+                </td>
+                <td className="border border-[#c8b87a]/40 px-4 py-2 text-right font-mono text-[12px] font-bold text-[#3a2e1a]">
+                  {ms !== null ? formatCountdown(ms) : '--:--:--'}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+
+
+function GameRanking({ data, labels }: {
+  data: RankingData
+  labels: {
+    player: string; guild: string
+    colChar: string; colGuild: string; colPoints: string
+    colMembers: string; colMaster: string; empty: string
+  }
+}) {
+  const [tab, setTab] = useState<'player' | 'guild'>('player')
+
+  const btnBase = 'flex-1 border border-[#c8b87a]/40 py-2 text-[11px] font-bold uppercase tracking-wider transition'
+  const btnActive = 'bg-[#d4bc7a] text-[#2a1f0a]'
+  const btnInactive = 'bg-[#e8dfc8] text-[#5a4010] hover:bg-[#ede5d8]'
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-[#c8b87a]/40">
+        <button
+          type="button"
+          className={`${btnBase} ${tab === 'player' ? btnActive : btnInactive}`}
+          onClick={() => setTab('player')}
+        >
+          {labels.player}
+        </button>
+        <button
+          type="button"
+          className={`${btnBase} ${tab === 'guild' ? btnActive : btnInactive}`}
+          onClick={() => setTab('guild')}
+        >
+          {labels.guild}
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto px-5 py-4">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr
+              className="border border-[#c8b87a]/60"
+              style={{ background: 'linear-gradient(180deg, #d4bc7a 0%, #c4a85c 100%)' }}
+            >
+              <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">#</th>
+              {tab === 'player' ? (
+                <>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">{labels.colChar}</th>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">{labels.colGuild}</th>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">{labels.colPoints}</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">Guild</th>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">{labels.colMaster}</th>
+                  <th className="px-4 py-2 text-center text-[12px] font-bold text-[#2a1f0a]">{labels.colMembers}</th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {tab === 'player'
+              ? data.players.map((p, i) => (
+                  <tr key={p.charName} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] font-semibold text-[#5a4010]">
+                      {p.rank}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {p.charName}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {p.guildName || '—'}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {p.points.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              : data.guilds.map((g, i) => (
+                  <tr key={g.guildName} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] font-semibold text-[#5a4010]">
+                      {g.rank}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {g.guildName}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {g.charName || '—'}
+                    </td>
+                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                      {g.points.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+            }
+            {((tab === 'player' && data.players.length === 0) || (tab === 'guild' && data.guilds.length === 0)) && (
+              <tr className="bg-[#d8d0b8]">
+                <td colSpan={4} className="border border-[#c8b87a]/40 px-4 py-4 text-center text-[12px] text-[#7a7060]">
+                  {labels.empty}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
+
+// ── Panel header shared style ────────────────────────────────────────────
+function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div
+      className="relative flex items-center gap-3 px-5 py-3.5 overflow-hidden"
+      style={{
+        backgroundImage: 'linear-gradient(135deg, rgba(196,169,92,0.6) 0%, rgba(168,136,48,0.4) 100%), url(/legacy/img/homebk22.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Overlay escuro */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
+      
+      {/* Ícone */}
+      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded bg-[var(--legacy-accent-gold)]/20 border border-[var(--legacy-accent-gold)]/60">
+        <span className="text-[var(--legacy-accent-gold)] text-lg drop-shadow">{icon}</span>
+      </div>
+      
+      {/* Título */}
+      <h2 className="relative z-10 font-serif text-[18px] font-bold italic tracking-wide text-[var(--legacy-accent-gold)] drop-shadow-lg">
+        {title}
+      </h2>
+    </div>
+  )
+}
+
+export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, rankingData }: HomeClientProps) {
   const { messages, locale } = useI18n()
   const allNews = latestNews ?? messages.home.featuredNews
 
@@ -46,7 +330,7 @@ export function HomeClient({ latestNews }: HomeClientProps) {
     <SiteContainer>
       {/* ── Top hero banner ─────────────────────────────────────────── */}
       <div
-        className="relative mb-0 h-[220px] w-full overflow-hidden rounded-t-xl border border-b-0 border-[var(--legacy-panel-border)]"
+        className="relative mb-0 h-[320px] w-full overflow-hidden rounded-t-xl border border-b-0 border-[var(--legacy-panel-border)]"
         style={{
           backgroundImage: 'url(/legacy/img/homebk22.png)',
           backgroundSize: 'cover',
@@ -57,6 +341,10 @@ export function HomeClient({ latestNews }: HomeClientProps) {
           src="/legacy/img/logo.png"
           alt="Silkroad Online"
           className="absolute left-6 top-6 h-20 w-auto drop-shadow-lg"
+        />
+        {/* Bottom fade blur */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
+          style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.92) 100%)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', maskImage: 'linear-gradient(to bottom, transparent 0%, black 60%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 60%)' }}
         />
       </div>
 
@@ -123,7 +411,7 @@ export function HomeClient({ latestNews }: HomeClientProps) {
         <main className="border-r border-[var(--legacy-panel-border)] bg-[#0a0907]">
           {/* Feature banner */}
           <div className="relative overflow-hidden border-b border-[var(--legacy-panel-border)]">
-            <img src="/legacy/img/001.png" alt="banner" className="w-full object-cover" style={{ maxHeight: '240px' }} />
+            <img src="/legacy/img/001.png" alt="banner" className="w-full object-cover object-top" />
           </div>
 
           {/* Latest News */}
@@ -154,6 +442,7 @@ export function HomeClient({ latestNews }: HomeClientProps) {
 
         {/* ── Right sidebar ─────────────────────────────────────── */}
         <aside className="bg-[#0d0c0b] divide-y divide-slate-800/60">
+          <SilkroadClock serverTimeZone={serverTimeZone} />
           {/* Charge / Buy item */}
           <Link href="/member/charge-center" className="flex flex-col items-center gap-1 px-3 py-4 transition hover:bg-slate-800/30">
             <svg viewBox="0 0 24 24" className="h-10 w-10 text-[var(--legacy-accent-gold)]" fill="currentColor" aria-hidden="true">
@@ -174,6 +463,36 @@ export function HomeClient({ latestNews }: HomeClientProps) {
             <span className="text-center text-[10px] text-slate-400 leading-snug">{messages.home.nav.registerDesc}</span>
           </Link>
 
+          {/* Server Info widget */}
+          {serverInfo && (
+            <Link href="/game-info/server-info" className="block px-3 py-3 transition hover:bg-slate-800/30">
+              <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--legacy-accent-gold)]">
+                {messages.serverInfo.panelTitle}
+              </p>
+              <dl className="space-y-1.5">
+                {([
+                  [messages.serverInfo.race,         serverInfo.race],
+                  [messages.serverInfo.cap,           serverInfo.cap],
+                  [messages.serverInfo.mastery,       serverInfo.mastery],
+                  [messages.serverInfo.expRate,       serverInfo.expRate],
+                  [messages.serverInfo.partyExpRate,  serverInfo.partyExpRate],
+                  [messages.serverInfo.questExpRate,  serverInfo.questExpRate],
+                  [messages.serverInfo.hwidLimit,     serverInfo.hwidLimit],
+                  [messages.serverInfo.ipLimit,       serverInfo.ipLimit],
+                  [messages.serverInfo.botDetect,     serverInfo.botDetect],
+                  ...(serverInfo.registeredAccounts !== null
+                    ? [[messages.serverInfo.registeredAccounts, serverInfo.registeredAccounts.toLocaleString()]]
+                    : []),
+                ] as [string, string][]).map(([label, val]) => (
+                  <div key={label} className="flex items-start justify-between gap-1">
+                    <dt className="text-[9px] uppercase tracking-wide text-slate-500 leading-snug">{label}</dt>
+                    <dd className="text-right text-[10px] font-semibold text-slate-200 leading-snug max-w-[90px]">{val}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Link>
+          )}
+
           {/* Download */}
           <Link href="/download" className="flex flex-col items-center gap-1 px-3 py-4 transition hover:bg-slate-800/30">
             <svg viewBox="0 0 24 24" className="h-10 w-10 text-[var(--legacy-accent-gold)]" fill="currentColor" aria-hidden="true">
@@ -184,6 +503,55 @@ export function HomeClient({ latestNews }: HomeClientProps) {
             <span className="text-center text-[10px] text-slate-400 leading-snug">{messages.home.nav.downloadDesc}</span>
           </Link>
         </aside>
+      </div>
+
+      {/* ── Event Schedule + Ranking ─────────────────────────────────── */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Event Schedule */}
+        <div className="overflow-hidden rounded-xl border-2 border-[#c8b87a]/70 shadow-xl" style={{ background: 'linear-gradient(135deg,#faf6ed,#e8dfc8)' }}>
+          <PanelHeader
+            title={messages.home.eventScheduleTitle}
+            icon={
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                {/* hourglass_empty */}
+                <path d="M6 2v6l4 4-4 4v6h12v-6l-4-4 4-4V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5-4-4V4h8v3.5l-4 4z" />
+              </svg>
+            }
+          />
+          <EventSchedule labels={messages.home.events} />
+        </div>
+
+        {/* Game Ranking */}
+        <div className="overflow-hidden rounded-xl border-2 border-[#c8b87a]/70 shadow-xl" style={{ background: 'linear-gradient(135deg,#faf6ed,#e8dfc8)' }}>
+          <PanelHeader
+            title={messages.home.rankingTitle}
+            icon={
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                {/* emoji_events / trophy */}
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+              </svg>
+            }
+          />
+          {rankingData ? (
+            <GameRanking
+              data={rankingData}
+              labels={{
+                player: messages.home.rankingPlayer,
+                guild: messages.home.rankingGuild,
+                colChar: messages.home.rankingColChar,
+                colGuild: messages.home.rankingColGuild,
+                colPoints: messages.home.rankingColPoints,
+                colMembers: messages.home.rankingColMembers,
+                colMaster: messages.home.rankingColMaster,
+                empty: messages.home.rankingEmpty,
+              }}
+            />
+          ) : (
+            <div className="bg-gradient-to-b from-[#f5f0e4] to-[#e8dfc8] px-4 py-12 text-center text-[13px] text-[#a89060]">
+              {messages.home.rankingEmpty}
+            </div>
+          )}
+        </div>
       </div>
     </SiteContainer>
   )

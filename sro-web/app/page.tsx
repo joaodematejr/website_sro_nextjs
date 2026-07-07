@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 
 import { I18N_COOKIE_NAME, defaultLocale, isLocale } from '@/lib/i18n'
 import { getLatestNewsFromDb } from '@/lib/news'
+import { getRankingData } from '@/lib/rankings'
+import { getServerInfo } from '@/lib/server-info'
 import { HomeClient } from './home-client'
 
 export const metadata: Metadata = {
@@ -20,11 +22,20 @@ export const metadata: Metadata = {
   },
 }
 
+export const revalidate = 60
+
 export default async function HomePage() {
   const cookieStore = await cookies()
   const localeFromCookie = cookieStore.get(I18N_COOKIE_NAME)?.value
   const locale = isLocale(localeFromCookie) ? localeFromCookie : defaultLocale
-  const latestNews = await getLatestNewsFromDb({ locale, limit: 3 })
 
-  return <HomeClient latestNews={latestNews ?? undefined} />
+  const [latestNews, serverInfo, rankingData] = await Promise.all([
+    getLatestNewsFromDb({ locale, limit: 3 }),
+    getServerInfo(),
+    getRankingData(),
+  ])
+
+  const serverTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  return <HomeClient latestNews={latestNews ?? undefined} serverTimeZone={serverTimeZone} serverInfo={serverInfo} rankingData={rankingData} />
 }
