@@ -167,17 +167,17 @@ function EventSchedule({ labels }: { labels: readonly { key: string; label: stri
 
   return (
     <div className="px-5 py-4">
-      <div className="overflow-hidden rounded-md border border-[#c8b87a]/40">
+      <div className="overflow-hidden rounded-md border border-[var(--legacy-panel-border)]">
         <table className="w-full border-collapse text-sm">
           <tbody>
             {DEFAULT_EVENTS.map((ev, i) => {
               const ms = now ? msUntilNextKst(ev.dayKst, ev.hourKst, ev.minuteKst, now) : null
               return (
-                <tr key={ev.key} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
-                  <td className="border border-[#c8b87a]/40 px-4 py-2 text-[12px] font-semibold text-[#5a4010]">
+                <tr key={ev.key} className={i % 2 === 0 ? 'bg-slate-900/60' : 'bg-[#14120f]'}>
+                  <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-[12px] font-semibold text-[var(--legacy-accent-gold)]">
                     {labelMap[ev.key] ?? ev.key}
                   </td>
-                  <td className="border border-[#c8b87a]/40 px-4 py-2 text-right font-mono text-[12px] font-bold text-[#3a2e1a]">
+                  <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-right font-mono text-[12px] font-bold text-slate-200">
                     {ms !== null ? formatCountdown(ms) : '--:--:--'}
                   </td>
                 </tr>
@@ -201,14 +201,14 @@ function GameRanking({ data, labels }: {
 }) {
   const [tab, setTab] = useState<'player' | 'guild'>('player')
 
-  const btnBase = 'flex-1 rounded-sm border border-[#c8b87a]/40 py-2 text-[11px] font-bold uppercase tracking-wider transition'
-  const btnActive = 'bg-[#d4bc7a] text-[#2a1f0a]'
-  const btnInactive = 'bg-[#e8dfc8] text-[#5a4010] hover:bg-[#ede5d8]'
+  const btnBase = 'flex-1 rounded-sm border border-[var(--legacy-panel-border)] py-2 text-[11px] font-bold uppercase tracking-wider transition'
+  const btnActive = 'border-[var(--legacy-accent-gold)] bg-[#2a2114] text-[var(--legacy-accent-gold)]'
+  const btnInactive = 'bg-slate-900/70 text-slate-300 hover:bg-slate-800/80 hover:text-[var(--legacy-accent-gold-hover)]'
 
   return (
     <div>
       {/* Tabs */}
-      <div className="flex gap-2 rounded-md border border-[#c8b87a]/40 bg-[#efe6d1] px-4 py-2">
+      <div className="flex gap-2 rounded-md border border-[var(--legacy-panel-border)] bg-[var(--legacy-navbar-bg)] px-4 py-2">
         <button
           type="button"
           className={`${btnBase} ${tab === 'player' ? btnActive : btnInactive}`}
@@ -227,7 +227,7 @@ function GameRanking({ data, labels }: {
 
       {/* Table */}
       <div className="px-5 py-4">
-        <div className="overflow-hidden rounded-md border border-[#c8b87a]/40">
+        <div className="overflow-hidden rounded-md border border-[var(--legacy-panel-border)]">
           <table className="w-full border-collapse text-sm">
           <thead>
             <tr
@@ -253,41 +253,41 @@ function GameRanking({ data, labels }: {
           <tbody>
             {tab === 'player'
               ? data.players.map((p, i) => (
-                  <tr key={p.charName} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] font-semibold text-[#5a4010]">
+                  <tr key={p.charName} className={i % 2 === 0 ? 'bg-slate-900/60' : 'bg-[#14120f]'}>
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] font-semibold text-[var(--legacy-accent-gold)]">
                       {p.rank}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {p.charName}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {p.guildName || '—'}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {p.points.toLocaleString()}
                     </td>
                   </tr>
                 ))
               : data.guilds.map((g, i) => (
-                  <tr key={g.guildName} className={i % 2 === 0 ? 'bg-[#f0e8d0]' : 'bg-[#e8dfc8]'}>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] font-semibold text-[#5a4010]">
+                  <tr key={g.guildName} className={i % 2 === 0 ? 'bg-slate-900/60' : 'bg-[#14120f]'}>
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] font-semibold text-[var(--legacy-accent-gold)]">
                       {g.rank}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {g.guildName}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {g.charName || '—'}
                     </td>
-                    <td className="border border-[#c8b87a]/40 px-4 py-2 text-center text-[12px] text-[#3a2e1a]">
+                    <td className="border border-[var(--legacy-panel-border)] px-4 py-2 text-center text-[12px] text-slate-200">
                       {g.points.toLocaleString()}
                     </td>
                   </tr>
                 ))
             }
             {((tab === 'player' && data.players.length === 0) || (tab === 'guild' && data.guilds.length === 0)) && (
-              <tr className="bg-[#d8d0b8]">
-                <td colSpan={4} className="border border-[#c8b87a]/40 px-4 py-4 text-center text-[12px] text-[#7a7060]">
+              <tr className="bg-[#171512]">
+                <td colSpan={4} className="border border-[var(--legacy-panel-border)] px-4 py-4 text-center text-[12px] text-slate-400">
                   {labels.empty}
                 </td>
               </tr>
@@ -304,11 +304,11 @@ function GameRanking({ data, labels }: {
 // ── Panel header shared style ────────────────────────────────────────────
 function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[#c8b87a]/40 px-5 py-3">
-      <div className="flex h-5 w-5 items-center justify-center text-[#6a5220]">
+    <div className="flex items-center gap-2 border-b border-[var(--legacy-panel-border)] bg-[var(--legacy-navbar-bg)] px-5 py-3">
+      <div className="flex h-5 w-5 items-center justify-center text-[var(--legacy-accent-gold)]">
         {icon}
       </div>
-      <h2 className="text-lg font-bold text-[#3a2e1a]">{title}</h2>
+      <h2 className="text-lg font-bold text-slate-100">{title}</h2>
     </div>
   )
 }
@@ -499,7 +499,7 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
       {/* ── Event Schedule + Ranking ─────────────────────────────────── */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Event Schedule */}
-        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[#f5f0e4] text-[#3a2e1a]">
+        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
           <PanelHeader
             title={messages.home.eventScheduleTitle}
             icon={
@@ -512,7 +512,7 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
         </div>
 
         {/* Game Ranking */}
-        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[#f5f0e4] text-[#3a2e1a]">
+        <div className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
           <PanelHeader
             title={messages.home.rankingTitle}
             icon={
