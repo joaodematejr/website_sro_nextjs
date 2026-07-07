@@ -35,6 +35,7 @@ const navSections: NavSection[] = [
     label: 'Membro',
     children: [
       { href: '/member/register', label: 'Cadastro' },
+      { href: '/member/reset-password', label: 'Redefinir Senha' },
       { href: '/member/charge-center', label: 'Central de Recarga' },
     ],
   },
@@ -79,9 +80,11 @@ export function SiteHeader() {
                           ? messages.header.gameDownload
                           : child.label === 'Cadastro'
                             ? messages.header.register
-                            : child.label === 'Central de Recarga'
-                              ? messages.header.chargeCenter
-                              : child.label
+                            : child.label === 'Redefinir Senha'
+                              ? messages.header.resetPassword
+                              : child.label === 'Central de Recarga'
+                                ? messages.header.chargeCenter
+                                : child.label
 
                       return (
                         <Link
