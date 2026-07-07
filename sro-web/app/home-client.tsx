@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { useI18n } from '@/components/providers/i18n-provider'
 import { SiteContainer } from '@/components/site/container'
+import type { NewsItem } from '@/lib/news'
 
 type MaterialIconProps = {
   path: string
@@ -32,8 +33,42 @@ const iconPaths = {
     'M3 10v4c0 .55.45 1 1 1h2l5 4V5L6 9H4c-.55 0-1 .45-1 1Zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.26 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z',
 } as const
 
-export function HomeClient() {
-  const { messages } = useI18n()
+type HomeClientProps = {
+  latestNews?: NewsItem[]
+}
+
+function formatNewsDate(value: string, locale: string) {
+  const isoDateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+
+  if (isoDateOnlyMatch) {
+    const [, year, month, day] = isoDateOnlyMatch
+    const safeDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)))
+
+    return new Intl.DateTimeFormat(locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(safeDate)
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(parsed)
+}
+
+export function HomeClient({ latestNews }: HomeClientProps) {
+  const { messages, locale } = useI18n()
+  const dbHotNews = latestNews?.[0]
+  const featuredNews = latestNews ?? messages.home.featuredNews
 
   return (
     <SiteContainer>
@@ -121,19 +156,21 @@ export function HomeClient() {
           <article className="mt-4 rounded-xl border border-[var(--legacy-panel-border)] bg-slate-950/70 p-4">
             <div className="flex items-center gap-2">
               <span className="rounded bg-[var(--legacy-accent-blue)]/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--legacy-accent-gold)]">
-                {messages.home.hotType}
+                {dbHotNews?.type ?? messages.home.hotType}
               </span>
-              <span className="text-[11px] text-slate-400">{messages.home.hotDate}</span>
+              <span className="text-[11px] text-slate-400">
+                {formatNewsDate(dbHotNews?.date ?? messages.home.hotDate, locale)}
+              </span>
             </div>
-            <p className="mt-2 text-sm font-semibold text-slate-100">{messages.home.hotTitle}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-100">{dbHotNews?.title ?? messages.home.hotTitle}</p>
           </article>
 
           <ul className="mt-4 space-y-3">
-            {messages.home.featuredNews.map((item) => (
+            {featuredNews.map((item) => (
               <li key={item.title} className="rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2">
                 <p className="text-xs font-semibold text-slate-100">{item.title}</p>
                 <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--legacy-accent-gold)]">
-                  {item.type} • {item.date}
+                  {item.type} • {formatNewsDate(item.date, locale)}
                 </p>
               </li>
             ))}
