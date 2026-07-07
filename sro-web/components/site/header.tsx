@@ -68,7 +68,7 @@ export function SiteHeader() {
                 <div key={section.label} className="group relative">
                   <button
                     type="button"
-                    className="rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-cyan)]"
+                    className="rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-gold-hover)]"
                   >
                     {label}
                   </button>
@@ -89,7 +89,7 @@ export function SiteHeader() {
                           href={child.href}
                           target={child.external ? '_blank' : undefined}
                           rel={child.external ? 'noreferrer' : undefined}
-                          className="block rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-cyan)]"
+                          className="block rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-gold-hover)]"
                         >
                           {childLabel}
                         </Link>
@@ -106,7 +106,7 @@ export function SiteHeader() {
                 href={section.href ?? '/'}
                 target={section.href?.startsWith('http') ? '_blank' : undefined}
                 rel={section.href?.startsWith('http') ? 'noreferrer' : undefined}
-                className="rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-cyan)]"
+                className="rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-gold-hover)]"
               >
                 {label}
               </Link>
@@ -114,7 +114,7 @@ export function SiteHeader() {
           })}
           <Link
             href="/actuator/health"
-            className="rounded-md border border-slate-700 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
+            className="rounded-md border border-slate-700 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-200 transition hover:border-[var(--legacy-accent-gold)] hover:text-[var(--legacy-accent-gold-hover)]"
           >
             {messages.header.health}
           </Link>
@@ -166,7 +166,7 @@ export function SiteHeader() {
                     href={child.href}
                     target={child.external ? '_blank' : undefined}
                     rel={child.external ? 'noreferrer' : undefined}
-                    className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-[var(--legacy-accent-cyan)]"
+                    className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-[var(--legacy-accent-gold)] hover:text-[var(--legacy-accent-gold-hover)]"
                   >
                     {childLabel}
                   </Link>
@@ -180,7 +180,7 @@ export function SiteHeader() {
                 href={section.href ?? '/'}
                 target={section.href?.startsWith('http') ? '_blank' : undefined}
                 rel={section.href?.startsWith('http') ? 'noreferrer' : undefined}
-                className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-[var(--legacy-accent-cyan)]"
+                className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-[var(--legacy-accent-gold)] hover:text-[var(--legacy-accent-gold-hover)]"
               >
                 {label}
               </Link>
@@ -188,7 +188,7 @@ export function SiteHeader() {
           })}
           <Link
             href="/actuator/health"
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
+            className="rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-[var(--legacy-accent-gold)] hover:text-[var(--legacy-accent-gold-hover)]"
           >
             {messages.header.health}
           </Link>

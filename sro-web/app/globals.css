@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #e2e8f0;
+  --background: #020202;
+  --foreground: #fff8c7;
   --legacy-shell-max: 980px;
   --legacy-nav-height: 80px;
   --legacy-main-top-height: 80px;
   --legacy-main-content-y: 50px;
   --legacy-main-content-x: 90px;
-  --legacy-navbar-bg: rgba(2, 6, 23, 0.9);
-  --legacy-panel-bg: rgba(15, 23, 42, 0.7);
-  --legacy-panel-border: rgba(148, 163, 184, 0.35);
-  --legacy-accent-cyan: #22d3ee;
-  --legacy-accent-gold: #cfa972;
-  --legacy-accent-gold-hover: #cfae65;
+  --legacy-navbar-bg: rgba(0, 0, 0, 0.68);
+  --legacy-panel-bg: rgba(0, 0, 0, 0.78);
+  --legacy-panel-border: rgba(206, 187, 129, 0.52);
+  --legacy-accent-blue: #1c4c7c;
+  --legacy-accent-cyan: #1c4c7c;
+  --legacy-accent-gold: #cebb81;
+  --legacy-accent-gold-hover: #fff8c7;
 }
 
 @theme inline {

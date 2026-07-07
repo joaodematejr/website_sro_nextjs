@@ -83,7 +83,7 @@ export default function RegisterPage() {
     <SiteContainer>
       <section className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-[var(--legacy-accent-gold)]/80 bg-[var(--legacy-panel-bg)]">
         <div className="flex min-h-[var(--legacy-main-top-height)] flex-col justify-center border-b border-[var(--legacy-accent-gold)]/80 px-5 py-4 sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--legacy-accent-cyan)]">{messages.register.step}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--legacy-accent-gold)]">{messages.register.step}</p>
           <h1 className="text-[32px] font-bold leading-tight text-white sm:text-[36px]">{messages.register.title}</h1>
           <p className="text-sm text-slate-300">{messages.register.description}</p>
         </div>
@@ -98,7 +98,7 @@ export default function RegisterPage() {
               pattern="[A-Za-z0-9]+"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400 transition focus:ring"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-[var(--legacy-accent-gold)] transition focus:ring"
               placeholder={messages.register.usernamePlaceholder}
             />
           </label>
@@ -112,7 +112,7 @@ export default function RegisterPage() {
               maxLength={48}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400 transition focus:ring"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-[var(--legacy-accent-gold)] transition focus:ring"
               placeholder={messages.register.passwordPlaceholder}
             />
           </label>
@@ -124,7 +124,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400 transition focus:ring"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-[var(--legacy-accent-gold)] transition focus:ring"
               placeholder="name@example.com"
             />
           </label>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={refreshCaptcha}
-                className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-cyan)]"
+                className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:bg-slate-800 hover:text-[var(--legacy-accent-gold-hover)]"
               >
                 {messages.register.refresh}
               </button>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
               required
               value={captcha}
               onChange={(event) => setCaptcha(event.target.value)}
-              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400 transition focus:ring"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-[var(--legacy-accent-gold)] transition focus:ring"
               placeholder={messages.register.captchaPlaceholder}
               inputMode="numeric"
               maxLength={5}
@@ -159,7 +159,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center rounded-lg bg-[var(--legacy-accent-cyan)] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-500"
+            className="inline-flex items-center rounded-lg bg-[var(--legacy-accent-gold)] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-[var(--legacy-accent-gold-hover)] disabled:cursor-not-allowed disabled:bg-slate-500"
           >
             {isSubmitting ? messages.register.creating : messages.register.createAccount}
           </button>

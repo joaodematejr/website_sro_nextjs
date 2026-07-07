@@ -12,7 +12,7 @@ export default function ChargeCenterPage() {
     <SiteContainer>
       <section className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-[var(--legacy-accent-gold)]/80 bg-[var(--legacy-panel-bg)]">
         <div className="flex min-h-[var(--legacy-main-top-height)] flex-col justify-center border-b border-[var(--legacy-accent-gold)]/80 px-5 py-4 sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--legacy-accent-cyan)]">{messages.chargeCenter.tag}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--legacy-accent-gold)]">{messages.chargeCenter.tag}</p>
           <h1 className="text-[32px] font-bold leading-tight text-white sm:text-[36px]">{messages.chargeCenter.title}</h1>
           <p className="text-sm text-slate-300">{messages.chargeCenter.description}</p>
         </div>
@@ -25,7 +25,7 @@ export default function ChargeCenterPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/"
-              className="rounded-lg bg-[var(--legacy-accent-cyan)] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+              className="rounded-lg bg-[var(--legacy-accent-gold)] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-[var(--legacy-accent-gold-hover)]"
             >
               {messages.chargeCenter.backHome}
             </Link>

@@ -23,17 +23,17 @@ export function DownloadClient() {
     <SiteContainer>
       <section className="space-y-8">
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{messages.download.step}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--legacy-accent-gold)]">{messages.download.step}</p>
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{messages.download.title}</h1>
           <p className="max-w-2xl text-sm text-slate-300">{messages.download.description}</p>
         </div>
 
-        <div className="rounded-2xl border border-cyan-500/30 bg-slate-900/70 p-6">
+        <div className="rounded-2xl border border-[var(--legacy-panel-border)] bg-slate-900/70 p-6">
           <div className="flex flex-wrap items-center gap-4">
             <img src="/legacy/img/download-sr.png" alt="download silkroad" className="h-10 w-auto" />
             <Link
               href={clientDownloadUrl}
-              className="inline-flex items-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              className="inline-flex items-center rounded-lg bg-[var(--legacy-accent-gold)] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-[var(--legacy-accent-gold-hover)]"
               target="_blank"
               rel="noreferrer"
             >
