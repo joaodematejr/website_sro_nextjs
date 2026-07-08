@@ -29,3 +29,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-legacy-sans), var(--font-geist-sans), sans-serif;
 }
+
+@media (min-width: 1024px) {
+  .home-stats-grid {
+    grid-auto-rows: 1fr;
+  }
+
+  .home-stats-grid > div,
+  .home-stats-grid > div > section {
+    height: 100%;
+  }
+}

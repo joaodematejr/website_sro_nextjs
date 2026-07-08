@@ -79,6 +79,16 @@ The following screenshots were generated from the current project version and sa
 
 ![Project home](public/readme/complete/home.png)
 
+### New Home Widgets
+
+The home page now includes additional public metrics widgets driven by SQL Server data:
+
+- DAU/WAU Engagement
+- New Player Conversion
+- Trader/Thief/Hunter Distribution
+
+![New home engagement widgets](public/readme/complete/home-widgets-engagement.png)
+
 ![Download page](public/readme/complete/download.png)
 
 ![Game areas](public/readme/complete/areas.png)

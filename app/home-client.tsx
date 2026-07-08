@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useI18n } from '@/components/providers/i18n-provider'
 import { SiteContainer } from '@/components/site/container'
 import type { NewsItem } from '@/lib/news'
+import type { PublicHomeStats } from '@/lib/public-home-stats'
 import type { RankingData } from '@/lib/rankings'
 import type { ServerInfo } from '@/lib/server-info'
 import type { UniqueSpawnItem } from '@/lib/unique-spawns'
@@ -16,6 +17,102 @@ export type HomeClientProps = {
   serverInfo?: ServerInfo
   rankingData?: RankingData
   uniqueSpawns?: UniqueSpawnItem[]
+  publicStats?: PublicHomeStats
+}
+
+function formatNumber(value: number | null) {
+  return value === null ? '—' : value.toLocaleString()
+}
+
+function formatDateTime(value: string | null, locale: string) {
+  if (!value) {
+    return '—'
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return '—'
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed)
+}
+
+function formatRelativeFromNow(value: string | null, locale: string) {
+  if (!value) {
+    return '—'
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return '—'
+  }
+
+  const diffMs = parsed.getTime() - Date.now()
+  const absMinutes = Math.round(Math.abs(diffMs) / 60000)
+
+  if (absMinutes < 1) {
+    return locale === 'pt-BR' ? 'agora' : 'now'
+  }
+
+  const unit = absMinutes < 60 ? 'minute' : 'hour'
+  const valueAmount = unit === 'minute' ? absMinutes : Math.round(absMinutes / 60)
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+
+  return formatter.format(diffMs < 0 ? -valueAmount : valueAmount, unit)
+}
+
+function formatSeconds(value: number | null) {
+  if (value === null) {
+    return '—'
+  }
+
+  if (value < 60) {
+    return `${Math.round(value)}s`
+  }
+
+  const minutes = Math.floor(value / 60)
+  const seconds = Math.round(value % 60)
+  return `${minutes}m ${String(seconds).padStart(2, '0')}s`
+}
+
+function formatPercent(value: number | null) {
+  if (value === null) {
+    return '—'
+  }
+
+  return `${Math.max(0, Math.min(100, value)).toFixed(1)}%`
+}
+
+function formatLatency(value: number | null) {
+  if (value === null) {
+    return '—'
+  }
+
+  return `${Math.max(0, Math.round(value))} ms`
+}
+
+function statusTone(value: PublicHomeStats['serviceStatus']['gateway']) {
+  if (value === 'online') {
+    return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+  }
+
+  if (value === 'degraded') {
+    return 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+  }
+
+  if (value === 'offline') {
+    return 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+  }
+
+  return 'bg-slate-700/30 text-slate-300 border-slate-600/50'
 }
 
 function formatClockDate(date: Date, timeZone: string) {
@@ -365,7 +462,801 @@ function LastUniqueSpawnCard({
   )
 }
 
-export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, rankingData, uniqueSpawns }: HomeClientProps) {
+function PublicOnlineCard({
+  title,
+  onlineLabel,
+  peakLabel,
+  onlineNow,
+  peak24h,
+}: {
+  title: string
+  onlineLabel: string
+  peakLabel: string
+  onlineNow: number | null
+  peak24h: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.98 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{onlineLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(onlineNow)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{peakLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(peak24h)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function PublicTopJobCard({
+  title,
+  jobLabel,
+  scoreLabel,
+  emptyLabel,
+  items,
+}: {
+  title: string
+  jobLabel: string
+  scoreLabel: string
+  emptyLabel: string
+  items: PublicHomeStats['topJobs']
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item) => (
+              <article key={`${item.rank}-${item.charName}`} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-[13px] font-semibold text-slate-100">#{item.rank} {item.charName}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-[var(--legacy-accent-gold)]">{item.jobName}</p>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{jobLabel}: {item.jobName}</span>
+                  <span>{scoreLabel}: {item.score.toLocaleString()}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PublicFortressCard({
+  title,
+  ownerLabel,
+  siegeLabel,
+  taxLabel,
+  emptyLabel,
+  items,
+  locale,
+}: {
+  title: string
+  ownerLabel: string
+  siegeLabel: string
+  taxLabel: string
+  emptyLabel: string
+  items: PublicHomeStats['fortresses']
+  locale: string
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 3 7v2h18V7l-9-5zm7 9H5v9h4v-6h6v6h4v-9z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item) => (
+              <article key={item.fortressName} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.fortressName}</p>
+                <div className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+                  <p>{ownerLabel}: {item.ownerGuild || '-'}</p>
+                  <p>{siegeLabel}: {formatDateTime(item.nextSiegeAt, locale)}</p>
+                  <p>{taxLabel}: {item.taxRate === null ? '—' : `${item.taxRate}%`}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function SpawnTrackerCard({
+  title,
+  lastKillLabel,
+  nextSpawnLabel,
+  emptyLabel,
+  locale,
+  items,
+}: {
+  title: string
+  lastKillLabel: string
+  nextSpawnLabel: string
+  emptyLabel: string
+  locale: string
+  items: PublicHomeStats['spawnTracker']
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2a10 10 0 1 0 10 10A10.012 10.012 0 0 0 12 2zm1 11H7v-2h4V6h2z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item) => (
+              <article key={`${item.uniqueName}-${item.lastKillAt ?? 'none'}`} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.uniqueName}</p>
+                <div className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+                  <p>{lastKillLabel}: {formatDateTime(item.lastKillAt, locale)}</p>
+                  <p>{nextSpawnLabel}: {formatRelativeFromNow(item.nextSpawnAt, locale)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function FortressTimelineCard({
+  title,
+  previousOwnerLabel,
+  newOwnerLabel,
+  changedAtLabel,
+  emptyLabel,
+  locale,
+  items,
+}: {
+  title: string
+  previousOwnerLabel: string
+  newOwnerLabel: string
+  changedAtLabel: string
+  emptyLabel: string
+  locale: string
+  items: PublicHomeStats['fortressTimeline']
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 4 5v6c0 5.25 3.4 10.74 8 12 4.6-1.26 8-6.75 8-12V5l-8-3z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item, index) => (
+              <article key={`${item.fortressName}-${item.changedAt ?? index}`} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.fortressName}</p>
+                <div className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+                  <p>{previousOwnerLabel}: {item.previousOwner || '-'}</p>
+                  <p>{newOwnerLabel}: {item.newOwner || '-'}</p>
+                  <p>{changedAtLabel}: {formatDateTime(item.changedAt, locale)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function NewCharactersCard({
+  title,
+  label24h,
+  label7d,
+  created24h,
+  created7d,
+}: {
+  title: string
+  label24h: string
+  label7d: string
+  created24h: number | null
+  created7d: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-6 1c-2.67 0-8 1.34-8 4v3h10v-3c0-1.13.39-2.15 1.03-3H9zM17 14v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label24h}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(created24h)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label7d}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(created7d)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function ServiceStatusCard({
+  title,
+  gatewayLabel,
+  loginLabel,
+  shardLabel,
+  billingLabel,
+  updatedAtLabel,
+  locale,
+  data,
+}: {
+  title: string
+  gatewayLabel: string
+  loginLabel: string
+  shardLabel: string
+  billingLabel: string
+  updatedAtLabel: string
+  locale: string
+  data: PublicHomeStats['serviceStatus']
+}) {
+  const rows: Array<[string, PublicHomeStats['serviceStatus']['gateway']]> = [
+    [gatewayLabel, data.gateway],
+    [loginLabel, data.login],
+    [shardLabel, data.shard],
+    [billingLabel, data.billing],
+  ]
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13 2.05v2.02A8.001 8.001 0 0 1 19.93 11H22a10 10 0 0 0-9-8.95zM4.07 13H2a10 10 0 0 0 9 8.95v-2.02A8.001 8.001 0 0 1 4.07 13zM11 2C5.48 2 1 6.48 1 12s4.48 10 10 10 10-4.48 10-10S16.52 2 11 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+          </svg>
+        }
+      />
+      <div className="space-y-2 px-5 py-4">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2">
+            <span className="text-[12px] text-slate-300">{label}</span>
+            <span className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusTone(value)}`}>
+              {value}
+            </span>
+          </div>
+        ))}
+
+        <p className="pt-1 text-[10px] text-slate-500">
+          {updatedAtLabel}: {formatDateTime(data.updatedAt, locale)}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function LoginQueueCard({
+  title,
+  queueLabel,
+  waitLabel,
+  queueSize,
+  avgWaitSeconds,
+}: {
+  title: string
+  queueLabel: string
+  waitLabel: string
+  queueSize: number | null
+  avgWaitSeconds: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 1a9 9 0 0 0-9 9v5a3 3 0 0 0 3 3h1v-8H5v8h14v-8h-2v8h1a3 3 0 0 0 3-3v-5a9 9 0 0 0-9-9z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{queueLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(queueSize)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{waitLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatSeconds(avgWaitSeconds)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function LoginSuccessCard({
+  title,
+  rateLabel,
+  attemptsLabel,
+  successRate1h,
+  attempts1h,
+}: {
+  title: string
+  rateLabel: string
+  attemptsLabel: string
+  successRate1h: number | null
+  attempts1h: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 6l2.29 2.29-4.88 4.88-3-3L4 16.59 5.41 18l5.59-5.59 3 3L19.71 9.7 22 12V6z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{rateLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatPercent(successRate1h)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{attemptsLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(attempts1h)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function UptimeCard({
+  title,
+  label24h,
+  label7d,
+  uptime24h,
+  uptime7d,
+}: {
+  title: string
+  label24h: string
+  label7d: string
+  uptime24h: number | null
+  uptime7d: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 15-4-4 1.41-1.41L11 13.17l4.59-4.58L17 10l-6 6z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label24h}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatPercent(uptime24h)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label7d}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatPercent(uptime7d)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function ServiceLatencyCard({
+  title,
+  gatewayLabel,
+  loginLabel,
+  shardLabel,
+  billingLabel,
+  updatedAtLabel,
+  locale,
+  data,
+}: {
+  title: string
+  gatewayLabel: string
+  loginLabel: string
+  shardLabel: string
+  billingLabel: string
+  updatedAtLabel: string
+  locale: string
+  data: PublicHomeStats['serviceLatency']
+}) {
+  const rows: Array<[string, number | null]> = [
+    [gatewayLabel, data.gatewayMs],
+    [loginLabel, data.loginMs],
+    [shardLabel, data.shardMs],
+    [billingLabel, data.billingMs],
+  ]
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 17h2.59L9 7l4 10 3-6 2.59 6H21v2h-3.59L16 13l-3 6-4-10-1.41 8H3z" />
+          </svg>
+        }
+      />
+      <div className="space-y-2 px-5 py-4">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2">
+            <span className="text-[12px] text-slate-300">{label}</span>
+            <span className="text-[12px] font-semibold text-[var(--legacy-accent-gold)]">{formatLatency(value)}</span>
+          </div>
+        ))}
+        <p className="pt-1 text-[10px] text-slate-500">
+          {updatedAtLabel}: {formatDateTime(data.updatedAt, locale)}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function ActiveEventsCard({
+  title,
+  startsAtLabel,
+  endsAtLabel,
+  emptyLabel,
+  locale,
+  items,
+}: {
+  title: string
+  startsAtLabel: string
+  endsAtLabel: string
+  emptyLabel: string
+  locale: string
+  items: PublicHomeStats['activeEvents']
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V10h14zm0-11H5V5h14z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item, index) => (
+              <article key={`${item.eventName}-${item.startsAt ?? index}`} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.eventName}</p>
+                <div className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+                  <p>{startsAtLabel}: {formatDateTime(item.startsAt, locale)}</p>
+                  <p>{endsAtLabel}: {formatDateTime(item.endsAt, locale)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function RetentionCard({
+  title,
+  d1Label,
+  d7Label,
+  cohortLabel,
+  retentionD1,
+  retentionD7,
+  cohort7d,
+}: {
+  title: string
+  d1Label: string
+  d7Label: string
+  cohortLabel: string
+  retentionD1: number | null
+  retentionD7: number | null
+  cohort7d: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.98 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{d1Label}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatPercent(retentionD1)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{d7Label}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatPercent(retentionD7)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{cohortLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(cohort7d)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function LevelDistributionCard({
+  title,
+  playersLabel,
+  emptyLabel,
+  items,
+}: {
+  title: string
+  playersLabel: string
+  emptyLabel: string
+  items: PublicHomeStats['levelDistribution']
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 17h2v-7H3v7zm4 0h2V7H7v10zm4 0h2v-4h-2v4zm4 0h2V4h-2v13zm4 0h2v-9h-2v9z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item) => (
+              <article key={item.rangeLabel} className="flex items-center justify-between rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.rangeLabel}</p>
+                <p className="text-[12px] text-slate-200">{playersLabel}: {item.players.toLocaleString()}</p>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function SilkConsumptionCard({
+  title,
+  label24h,
+  label7d,
+  consumed24h,
+  consumed7d,
+}: {
+  title: string
+  label24h: string
+  label7d: string
+  consumed24h: number | null
+  consumed7d: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 6h18v2H3zm2 4h14v8H5zm4 2v4h2v-4zm4 0v4h2v-4z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label24h}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(consumed24h)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{label7d}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(consumed7d)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function DauWauCard({
+  title,
+  dauLabel,
+  wauLabel,
+  ratioLabel,
+  dau,
+  wau,
+  ratio,
+}: {
+  title: string
+  dauLabel: string
+  wauLabel: string
+  ratioLabel: string
+  dau: number | null
+  wau: number | null
+  ratio: number | null
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M4 20h16v-2H4zm1-4h3v-5H5zm5 0h3V8h-3zm5 0h3V4h-3z" />
+          </svg>
+        }
+      />
+      <div className="space-y-3 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{dauLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(dau)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{wauLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{formatNumber(wau)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">{ratioLabel}</p>
+          <p className="mt-1 text-[28px] font-bold leading-none text-[var(--legacy-accent-gold)]">{ratio === null ? '—' : formatPercent(ratio * 100)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function NewPlayerConversionCard({
+  title,
+  createdLabel,
+  firstLoginLabel,
+  firstCharacterLabel,
+  loginRateLabel,
+  characterRateLabel,
+  created,
+  firstLogin,
+  firstCharacter,
+}: {
+  title: string
+  createdLabel: string
+  firstLoginLabel: string
+  firstCharacterLabel: string
+  loginRateLabel: string
+  characterRateLabel: string
+  created: number | null
+  firstLogin: number | null
+  firstCharacter: number | null
+}) {
+  const loginRate = created && created > 0 && firstLogin != null ? (firstLogin / created) * 100 : null
+  const characterRate = created && created > 0 && firstCharacter != null ? (firstCharacter / created) * 100 : null
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.87 0-7 2.24-7 5v1h14v-1c0-2.76-3.13-5-7-5z" />
+          </svg>
+        }
+      />
+      <div className="space-y-2.5 px-5 py-4">
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+          <p className="text-[11px] text-slate-400">{createdLabel}</p>
+          <p className="text-[18px] font-semibold text-[var(--legacy-accent-gold)]">{formatNumber(created)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+          <p className="text-[11px] text-slate-400">{firstLoginLabel}</p>
+          <p className="text-[18px] font-semibold text-[var(--legacy-accent-gold)]">{formatNumber(firstLogin)}</p>
+          <p className="text-[11px] text-slate-400">{loginRateLabel}: {formatPercent(loginRate)}</p>
+        </article>
+        <article className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+          <p className="text-[11px] text-slate-400">{firstCharacterLabel}</p>
+          <p className="text-[18px] font-semibold text-[var(--legacy-accent-gold)]">{formatNumber(firstCharacter)}</p>
+          <p className="text-[11px] text-slate-400">{characterRateLabel}: {formatPercent(characterRate)}</p>
+        </article>
+      </div>
+    </section>
+  )
+}
+
+function JobDistributionCard({
+  title,
+  playersLabel,
+  emptyLabel,
+  items,
+}: {
+  title: string
+  playersLabel: string
+  emptyLabel: string
+  items: PublicHomeStats['jobDistribution']
+}) {
+  const total = items.reduce((sum, item) => sum + item.players, 0)
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 2 7l10 5 8-4v6h2V7L12 2zm-8 9v6l8 5 8-5v-6l-8 4-8-4z" />
+          </svg>
+        }
+      />
+      <div className="px-5 py-4">
+        {items.length === 0 ? (
+          <p className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-4 py-4 text-center text-[12px] text-slate-400">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2.5">
+            {items.map((item) => {
+              const percent = total > 0 ? (item.players / total) * 100 : null
+              return (
+                <article key={item.jobName} className="rounded border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[13px] font-semibold text-[var(--legacy-accent-gold)]">{item.jobName}</p>
+                    <p className="text-[11px] text-slate-300">{formatPercent(percent)}</p>
+                  </div>
+                  <p className="mt-1 text-[12px] text-slate-200">{playersLabel}: {item.players.toLocaleString()}</p>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, rankingData, uniqueSpawns, publicStats }: HomeClientProps) {
   const { messages, locale } = useI18n()
   const allNews = latestNews ?? messages.home.featuredNews
 
@@ -598,6 +1489,210 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
           title={messages.home.lastUniqueSpawnTitle}
           killedByLabel={messages.home.killedBy}
           items={uniqueSpawns ?? []}
+        />
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <PublicOnlineCard
+            title={messages.home.onlineTitle}
+            onlineLabel={messages.home.onlineNowLabel}
+            peakLabel={messages.home.onlinePeak24hLabel}
+            onlineNow={publicStats?.online.onlineNow ?? null}
+            peak24h={publicStats?.online.peak24h ?? null}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <PublicTopJobCard
+            title={messages.home.topJobTitle}
+            jobLabel={messages.home.jobLabel}
+            scoreLabel={messages.home.scoreLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            items={publicStats?.topJobs ?? []}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <PublicFortressCard
+            title={messages.home.fortressTitle}
+            ownerLabel={messages.home.fortressOwnerLabel}
+            siegeLabel={messages.home.fortressNextSiegeLabel}
+            taxLabel={messages.home.fortressTaxLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            items={publicStats?.fortresses ?? []}
+            locale={locale}
+          />
+        </div>
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <SpawnTrackerCard
+            title={messages.home.spawnTrackerTitle}
+            lastKillLabel={messages.home.spawnLastKillLabel}
+            nextSpawnLabel={messages.home.spawnNextLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            locale={locale}
+            items={publicStats?.spawnTracker ?? []}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <FortressTimelineCard
+            title={messages.home.fortressTimelineTitle}
+            previousOwnerLabel={messages.home.fortressPrevOwnerLabel}
+            newOwnerLabel={messages.home.fortressNewOwnerLabel}
+            changedAtLabel={messages.home.fortressChangedAtLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            locale={locale}
+            items={publicStats?.fortressTimeline ?? []}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <NewCharactersCard
+            title={messages.home.newCharactersTitle}
+            label24h={messages.home.newCharacters24hLabel}
+            label7d={messages.home.newCharacters7dLabel}
+            created24h={publicStats?.newCharacters.created24h ?? null}
+            created7d={publicStats?.newCharacters.created7d ?? null}
+          />
+        </div>
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <ServiceStatusCard
+            title={messages.home.serviceStatusTitle}
+            gatewayLabel={messages.home.serviceGatewayLabel}
+            loginLabel={messages.home.serviceLoginLabel}
+            shardLabel={messages.home.serviceShardLabel}
+            billingLabel={messages.home.serviceBillingLabel}
+            updatedAtLabel={messages.home.serviceUpdatedAtLabel}
+            locale={locale}
+            data={publicStats?.serviceStatus ?? {
+              gateway: 'unknown',
+              login: 'unknown',
+              shard: 'unknown',
+              billing: 'unknown',
+              updatedAt: null,
+            }}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <LoginQueueCard
+            title={messages.home.loginQueueTitle}
+            queueLabel={messages.home.loginQueueSizeLabel}
+            waitLabel={messages.home.loginQueueWaitLabel}
+            queueSize={publicStats?.loginQueue.queueSize ?? null}
+            avgWaitSeconds={publicStats?.loginQueue.avgWaitSeconds ?? null}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <LoginSuccessCard
+            title={messages.home.loginSuccessTitle}
+            rateLabel={messages.home.loginSuccessRateLabel}
+            attemptsLabel={messages.home.loginSuccessAttemptsLabel}
+            successRate1h={publicStats?.loginSuccess.successRate1h ?? null}
+            attempts1h={publicStats?.loginSuccess.attempts1h ?? null}
+          />
+        </div>
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <UptimeCard
+            title={messages.home.uptimeTitle}
+            label24h={messages.home.uptime24hLabel}
+            label7d={messages.home.uptime7dLabel}
+            uptime24h={publicStats?.uptime.uptime24h ?? null}
+            uptime7d={publicStats?.uptime.uptime7d ?? null}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <ServiceLatencyCard
+            title={messages.home.serviceLatencyTitle}
+            gatewayLabel={messages.home.serviceGatewayLabel}
+            loginLabel={messages.home.serviceLoginLabel}
+            shardLabel={messages.home.serviceShardLabel}
+            billingLabel={messages.home.serviceBillingLabel}
+            updatedAtLabel={messages.home.serviceUpdatedAtLabel}
+            locale={locale}
+            data={publicStats?.serviceLatency ?? {
+              gatewayMs: null,
+              loginMs: null,
+              shardMs: null,
+              billingMs: null,
+              updatedAt: null,
+            }}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <ActiveEventsCard
+            title={messages.home.activeEventsTitle}
+            startsAtLabel={messages.home.activeEventStartsLabel}
+            endsAtLabel={messages.home.activeEventEndsLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            locale={locale}
+            items={publicStats?.activeEvents ?? []}
+          />
+        </div>
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <RetentionCard
+            title={messages.home.retentionTitle}
+            d1Label={messages.home.retentionD1Label}
+            d7Label={messages.home.retentionD7Label}
+            cohortLabel={messages.home.retentionCohortLabel}
+            retentionD1={publicStats?.retention.retentionD1 ?? null}
+            retentionD7={publicStats?.retention.retentionD7 ?? null}
+            cohort7d={publicStats?.retention.cohort7d ?? null}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <LevelDistributionCard
+            title={messages.home.levelDistributionTitle}
+            playersLabel={messages.home.playersLabel}
+            emptyLabel={messages.home.publicDataEmpty}
+            items={publicStats?.levelDistribution ?? []}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <SilkConsumptionCard
+            title={messages.home.silkConsumptionTitle}
+            label24h={messages.home.silkConsumption24hLabel}
+            label7d={messages.home.silkConsumption7dLabel}
+            consumed24h={publicStats?.silkConsumption.consumed24h ?? null}
+            consumed7d={publicStats?.silkConsumption.consumed7d ?? null}
+          />
+        </div>
+      </div>
+
+      <div className="home-stats-grid mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <DauWauCard
+          title={messages.home.dauWauTitle}
+          dauLabel={messages.home.dauLabel}
+          wauLabel={messages.home.wauLabel}
+          ratioLabel={messages.home.dauWauRatioLabel}
+          dau={publicStats?.dauWau.dau ?? null}
+          wau={publicStats?.dauWau.wau ?? null}
+          ratio={publicStats?.dauWau.dauWauRatio ?? null}
+        />
+        <NewPlayerConversionCard
+          title={messages.home.newPlayerConversionTitle}
+          createdLabel={messages.home.newAccounts24hLabel}
+          firstLoginLabel={messages.home.firstLogin24hLabel}
+          firstCharacterLabel={messages.home.firstCharacter24hLabel}
+          loginRateLabel={messages.home.firstLoginRateLabel}
+          characterRateLabel={messages.home.firstCharacterRateLabel}
+          created={publicStats?.newPlayerConversion.created24h ?? null}
+          firstLogin={publicStats?.newPlayerConversion.firstLogin24h ?? null}
+          firstCharacter={publicStats?.newPlayerConversion.firstCharacter24h ?? null}
+        />
+        <JobDistributionCard
+          title={messages.home.jobDistributionTitle}
+          playersLabel={messages.home.playersLabel}
+          emptyLabel={messages.home.publicDataEmpty}
+          items={publicStats?.jobDistribution ?? []}
         />
       </div>
     </SiteContainer>

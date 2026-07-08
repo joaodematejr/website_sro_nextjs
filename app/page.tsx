@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 import { I18N_COOKIE_NAME, defaultLocale, isLocale } from '@/lib/i18n'
 import { getLatestNewsFromDb } from '@/lib/news'
+import { getPublicHomeStats } from '@/lib/public-home-stats'
 import { getRankingData } from '@/lib/rankings'
 import { getServerInfo } from '@/lib/server-info'
 import { getLastUniqueSpawns } from '@/lib/unique-spawns'
@@ -30,11 +31,12 @@ export default async function HomePage() {
   const localeFromCookie = cookieStore.get(I18N_COOKIE_NAME)?.value
   const locale = isLocale(localeFromCookie) ? localeFromCookie : defaultLocale
 
-  const [latestNews, serverInfo, rankingData, uniqueSpawns] = await Promise.all([
+  const [latestNews, serverInfo, rankingData, uniqueSpawns, publicStats] = await Promise.all([
     getLatestNewsFromDb({ locale, limit: 3 }),
     getServerInfo(),
     getRankingData(),
     getLastUniqueSpawns(locale, 12),
+    getPublicHomeStats(5),
   ])
 
   const serverTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -46,6 +48,7 @@ export default async function HomePage() {
       serverInfo={serverInfo}
       rankingData={rankingData}
       uniqueSpawns={uniqueSpawns}
+      publicStats={publicStats}
     />
   )
 }
