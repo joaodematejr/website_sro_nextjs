@@ -133,3 +133,4 @@ Arquivos importantes para contribuidores:
 Checklist de mantenedor para publicar e operar o projeto em modo open source:
 
 - `docs/open-source-maintainer-checklist.md`
+- `docs/open-source-maintainer-checklist.pt-BR.md`
