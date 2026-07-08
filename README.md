@@ -2,7 +2,7 @@
 
 Web portal for the Silkroad Online server, built with Next.js (App Router), React, and TypeScript.
 
-## Stack
+## Tech Stack
 
 - Next.js 16
 - React 19
@@ -46,7 +46,7 @@ Notes:
 - `DB_SERVER` supports formats such as `host`, `host,1433`, or `host\\INSTANCE`.
 - If using a named instance and `DB_PORT` is not set, the connection uses `instanceName`.
 
-## Running the Project
+## Getting Started
 
 Install dependencies:
 
@@ -67,15 +67,15 @@ npm run build
 npm run start
 ```
 
-Lint:
+Run lint:
 
 ```bash
 npm run lint
 ```
 
-## Screenshots
+## Site Snapshot
 
-Complete visual snapshot of the portal generated from the current project version and saved under `public/readme/complete/`.
+The following screenshots were generated from the current project version and saved under `public/readme/complete/`.
 
 ![Project home](public/readme/complete/home.png)
 
@@ -91,7 +91,7 @@ Complete visual snapshot of the portal generated from the current project versio
 
 ![Charge center](public/readme/complete/charge-center.png)
 
-## Main Structure
+## Project Structure
 
 - `app/`: routes and pages (App Router)
 - `app/home-client.tsx`: main home layout
@@ -103,7 +103,7 @@ Complete visual snapshot of the portal generated from the current project versio
 - `components/providers/i18n-provider.tsx`: internationalization
 - `public/legacy/`: legacy theme visual assets
 
-## Internationalization
+## Localization
 
 Locale is defined by cookie and consumed through the i18n provider. The home page resolves data on the server and passes it to the client in `app/page.tsx` + `app/home-client.tsx`.
 
@@ -112,9 +112,9 @@ Locale is defined by cookie and consumed through the i18n provider. The home pag
 - The home page uses incremental revalidation (`revalidate = 60`).
 - If SQL pool creation fails, the connection is discarded and recreated automatically on the next call.
 
-## Open Source Contribution
+## Contributing
 
-This repository is prepared for external contributions with:
+This repository is ready for external contributions with:
 
 - Automated CI for PRs (`lint`, `typecheck`, `build`)
 - Security analysis with CodeQL
@@ -123,14 +123,14 @@ This repository is prepared for external contributions with:
 - Issue and pull request templates
 - Contribution guide and security/community policies
 
-Important files for contributors:
+Key files for contributors:
 
 - `CONTRIBUTING.md`
 - `SECURITY.md`
 - `CODE_OF_CONDUCT.md`
 - `SUPPORT.md`
 
-Maintainer checklist to publish and operate the project in open source mode:
+Maintainer checklists for publishing and operating the project in open source mode:
 
 - `docs/open-source-maintainer-checklist.md`
 - `docs/open-source-maintainer-checklist.pt-BR.md`
