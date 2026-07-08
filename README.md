@@ -67,6 +67,24 @@ Lint:
 npm run lint
 ```
 
+## Capturas
+
+Registro visual completo do portal gerado a partir da versao atual do projeto e salvo em `public/readme/complete/`.
+
+![Home do projeto](public/readme/complete/home.png)
+
+![Pagina de download](public/readme/complete/download.png)
+
+![Areas do jogo](public/readme/complete/areas.png)
+
+![Informacoes do servidor](public/readme/complete/server-info.png)
+
+![Cadastro de membro](public/readme/complete/register.png)
+
+![Recuperacao de senha](public/readme/complete/reset-password.png)
+
+![Central de recarga](public/readme/complete/charge-center.png)
+
 ## Estrutura principal
 
 - `app/`: rotas e paginas (App Router)
