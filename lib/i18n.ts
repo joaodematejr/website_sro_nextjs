@@ -98,6 +98,8 @@ export const i18nMessages = {
       rankingColMembers: 'Membros',
       rankingColMaster: 'Lider',
       rankingEmpty: 'Sem dados disponíveis',
+      lastUniqueSpawnTitle: 'Last Unique Spawn',
+      killedBy: 'Killed by',
       events: [
         { key: 'ctf',          label: 'CTF' },
         { key: 'baFlag',       label: 'BA Flag' },
@@ -345,6 +347,8 @@ export const i18nMessages = {
       rankingColMembers: 'Members',
       rankingColMaster: 'Master',
       rankingEmpty: 'No data available',
+      lastUniqueSpawnTitle: 'Last Unique Spawn',
+      killedBy: 'Killed by',
       events: [
         { key: 'ctf',          label: 'CTF' },
         { key: 'baFlag',       label: 'BA Flag' },

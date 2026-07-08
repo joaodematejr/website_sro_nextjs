@@ -8,12 +8,14 @@ import { SiteContainer } from '@/components/site/container'
 import type { NewsItem } from '@/lib/news'
 import type { RankingData } from '@/lib/rankings'
 import type { ServerInfo } from '@/lib/server-info'
+import type { UniqueSpawnItem } from '@/lib/unique-spawns'
 
 export type HomeClientProps = {
   latestNews?: NewsItem[]
   serverTimeZone?: string
   serverInfo?: ServerInfo
   rankingData?: RankingData
+  uniqueSpawns?: UniqueSpawnItem[]
 }
 
 function formatClockDate(date: Date, timeZone: string) {
@@ -311,7 +313,59 @@ function PanelHeader({ icon, title }: { icon: React.ReactNode; title: string }) 
   )
 }
 
-export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, rankingData }: HomeClientProps) {
+function LastUniqueSpawnCard({
+  title,
+  killedByLabel,
+  items,
+}: {
+  title: string
+  killedByLabel: string
+  items: readonly { name: string; killer: string; elapsed: string }[]
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--legacy-panel-border)] bg-[var(--legacy-panel-bg)] text-slate-200">
+      <PanelHeader
+        title={title}
+        icon={
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M5.59 3 3 5.59l2.83 2.83L2 12.24 3.76 14l3.82-3.82 2.83 2.83L13 10.41 5.59 3zm12.82 0L11 10.41l2.59 2.59 2.83-2.83L20.24 14 22 12.24l-3.82-3.82L21 5.59 18.41 3z" />
+          </svg>
+        }
+      />
+
+      <div className="max-h-[430px] overflow-y-auto px-5 py-4">
+        <div className="space-y-3">
+          {items.map((item, i) => (
+            <article
+              key={`${item.name}-${item.killer}-${i}`}
+              className="rounded-xl border border-[var(--legacy-panel-border)] bg-[#15120f] px-3 py-2.5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[3px] border-[#64553e] bg-[#3e3528] text-[13px] font-bold text-[var(--legacy-accent-gold)]">
+                  {item.name.slice(0, 1)}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-serif text-[32px] leading-[1.05] text-[var(--legacy-accent-gold)] [font-size:clamp(20px,2vw,32px)]">
+                    {item.name}
+                  </p>
+                  <div className="mt-1.5 rounded bg-[#4a3f31] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#eed49a] [font-size:clamp(11px,1.1vw,16px)]">
+                    {killedByLabel}. {item.killer}
+                  </div>
+                  <p className="mt-1 text-[14px] text-slate-300 [font-size:clamp(12px,1.1vw,20px)]">
+                    {item.elapsed}
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, rankingData, uniqueSpawns }: HomeClientProps) {
   const { messages, locale } = useI18n()
   const allNews = latestNews ?? messages.home.featuredNews
 
@@ -537,6 +591,14 @@ export function HomeClient({ latestNews, serverTimeZone = 'UTC', serverInfo, ran
             <div className="px-5 py-4 text-center text-[12px] text-[#7a7060]">{messages.home.rankingEmpty}</div>
           )}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <LastUniqueSpawnCard
+          title={messages.home.lastUniqueSpawnTitle}
+          killedByLabel={messages.home.killedBy}
+          items={uniqueSpawns ?? []}
+        />
       </div>
     </SiteContainer>
   )
