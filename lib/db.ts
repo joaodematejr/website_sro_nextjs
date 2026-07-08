@@ -15,6 +15,22 @@ const requiredEnv = [
   ...Object.values(databaseEnvByName),
 ] as const
 
+function getRequiredEnv(envName: (typeof requiredEnv)[number]) {
+  const value = process.env[envName]
+
+  if (!value) {
+    throw new Error(`Missing environment variable: ${envName}`)
+  }
+
+  return value
+}
+
+function ensureRequiredEnv() {
+  for (const envName of requiredEnv) {
+    getRequiredEnv(envName)
+  }
+}
+
 function readBooleanEnv(envName: string, defaultValue: boolean) {
   const value = process.env[envName]?.trim().toLowerCase()
 
@@ -34,7 +50,7 @@ function readBooleanEnv(envName: string, defaultValue: boolean) {
 }
 
 function createDbTarget(database: string) {
-  const rawServer = process.env.DB_SERVER!.trim()
+  const rawServer = getRequiredEnv('DB_SERVER').trim()
   const hasNamedInstance = rawServer.includes('\\')
 
   let server = rawServer
@@ -74,20 +90,14 @@ function createDbTarget(database: string) {
   }
 }
 
-for (const envName of requiredEnv) {
-  if (!process.env[envName]) {
-    throw new Error(`Missing environment variable: ${envName}`)
-  }
-}
-
 function createDbConfig(database: string): sql.config {
   const target = createDbTarget(database)
 
   return {
     server: target.server,
     database,
-    user: process.env.DB_USER!,
-    password: process.env.DB_PASSWORD!,
+    user: getRequiredEnv('DB_USER'),
+    password: getRequiredEnv('DB_PASSWORD'),
     ...(target.port !== undefined ? { port: target.port } : {}),
     options: {
       encrypt: target.encrypt,
@@ -103,19 +113,20 @@ function createDbConfig(database: string): sql.config {
 }
 
 export function getDbConnectionTarget(dbName: DbName = 'shard') {
-  return createDbTarget(process.env[databaseEnvByName[dbName]]!)
+  ensureRequiredEnv()
+  return createDbTarget(getRequiredEnv(databaseEnvByName[dbName]))
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var mssqlPools: Partial<Record<DbName, Promise<sql.ConnectionPool>>> | undefined
 }
 
 export function getDbPool(dbName: DbName = 'shard') {
+  ensureRequiredEnv()
   globalThis.mssqlPools ??= {}
 
   if (!globalThis.mssqlPools[dbName]) {
-    const database = process.env[databaseEnvByName[dbName]]!
+    const database = getRequiredEnv(databaseEnvByName[dbName])
     globalThis.mssqlPools[dbName] = new sql.ConnectionPool(createDbConfig(database))
       .connect()
       .then((pool) => {

@@ -39,7 +39,6 @@ function SilkroadClock({ serverTimeZone }: { serverTimeZone: string }) {
   const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
-    setNow(new Date())
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
@@ -123,7 +122,7 @@ function msUntilNextKst(dayKst: number, hourKst: number, minuteKst: number, now:
   // Build target for this week
   const nowKstDate = new Date(nowKstMs)
   const currentDayKst = nowKstDate.getUTCDay()
-  let daysAhead = (dayKst - currentDayKst + 7) % 7
+  const daysAhead = (dayKst - currentDayKst + 7) % 7
 
   // If same day but already past the time, move to next week
   const targetMs =
@@ -158,7 +157,6 @@ function EventSchedule({ labels }: { labels: readonly { key: string; label: stri
   const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
-    setNow(new Date())
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
