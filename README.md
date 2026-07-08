@@ -18,7 +18,13 @@ Portal web do servidor Silkroad Online, construido com Next.js (App Router), Rea
 
 ## Variaveis de ambiente
 
-Crie um arquivo `.env.local` na raiz do projeto com:
+Copie o arquivo de exemplo e ajuste os valores para seu ambiente:
+
+```bash
+cp .env.example .env.local
+```
+
+Ou crie um arquivo `.env.local` na raiz do projeto com:
 
 ```env
 DB_SERVER=localhost
@@ -105,3 +111,25 @@ O locale e definido por cookie e consumido via provider de i18n. A home resolve 
 
 - A home usa revalidacao incremental (`revalidate = 60`).
 - Em caso de falha de pool SQL, a conexao e descartada e recriada automaticamente na proxima chamada.
+
+## Contribuicao Open Source
+
+Este repositorio esta preparado para contribuicoes externas com:
+
+- CI automatica para PRs (`lint`, `typecheck`, `build`)
+- Analise de seguranca com CodeQL
+- Revisao de dependencias em PR
+- Atualizacoes automatizadas via Dependabot
+- Templates de issues e pull requests
+- Guia de contribuicao e politicas de seguranca/comunidade
+
+Arquivos importantes para contribuidores:
+
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `CODE_OF_CONDUCT.md`
+- `SUPPORT.md`
+
+Checklist de mantenedor para publicar e operar o projeto em modo open source:
+
+- `docs/open-source-maintainer-checklist.md`

@@ -1,0 +1,16 @@
+# Global default owners
+* @joaodematejr
+
+# App routes and UI
+/app/ @joaodematejr
+/components/ @joaodematejr
+/public/ @joaodematejr
+
+# Backend/domain logic
+/lib/ @joaodematejr
+
+# Docs and project policies
+/docs/ @joaodematejr
+/README.md @joaodematejr
+/CONTRIBUTING.md @joaodematejr
+/SECURITY.md @joaodematejr

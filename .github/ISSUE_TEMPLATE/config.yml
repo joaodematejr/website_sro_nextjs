@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussions
+    url: https://github.com/joaodematejr/website_sro_nextjs/discussions
+    about: Please use Discussions for support questions and general ideas.
